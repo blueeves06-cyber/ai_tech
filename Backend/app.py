@@ -1,20 +1,31 @@
 import os
 import requests
 import google.generativeai as genai
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 app = Flask(__name__)
-# Mengizinkan akses dari domain Vercel spesifik atau semua domain
-CORS(app) 
+CORS(app)
 
-# --- KONFIGURASI API KEY ----
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
 
-# Inisialisasi Gemini
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_FRONTEND_DIR = os.path.normpath(os.path.join(_BASE_DIR, "..", "frontend"))
+
+_gemini_model = None
+
+
+def get_gemini_model():
+    """Baris ini di-defer agar /weather & halaman utama tidak gagal saat cold start."""
+    global _gemini_model
+    if _gemini_model is None:
+        key = os.environ.get("GEMINI_API_KEY")
+        if not key:
+            raise RuntimeError("GEMINI_API_KEY tidak di-set di environment.")
+        genai.configure(api_key=key)
+        _gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+    return _gemini_model
 
 def get_weather_context(location):
     """Mengambil data cuaca real-time untuk memperkuat reasoning AI"""
@@ -177,7 +188,7 @@ def analyze_onion():
             "data": img_data
         }
 
-        response = model.generate_content([prompt, image_part])
+        response = get_gemini_model().generate_content([prompt, image_part])
         
         # Bersihkan response teks dari markdown block
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
@@ -211,8 +222,24 @@ def weather_endpoint():
     return jsonify(bundle), 200
 
 
-@app.route('/', methods=['GET'])
+@app.route("/", methods=["GET"])
 def home():
+    """Dasbor statis (Vercel: satu deployment untuk UI + API)."""
+    return send_from_directory(_FRONTEND_DIR, "index.html")
+
+
+@app.route("/style.css", methods=["GET"])
+def serve_css():
+    return send_from_directory(_FRONTEND_DIR, "style.css")
+
+
+@app.route("/script.js", methods=["GET"])
+def serve_js():
+    return send_from_directory(_FRONTEND_DIR, "script.js")
+
+
+@app.route("/health", methods=["GET"])
+def health():
     return jsonify({"status": "AgriMind AI Backend is Running"}), 200
 
 if __name__ == '__main__':
