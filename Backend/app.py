@@ -7,31 +7,50 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
-
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _FRONTEND_DIR = os.path.normpath(os.path.join(_BASE_DIR, "..", "frontend"))
 
 _gemini_model = None
 
 
+def env_gemini_key():
+    """Google AI Studio: GEMINI_API_KEY. Beberapa setup memakai GOOGLE_API_KEY."""
+    return (
+        os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+        or ""
+    ).strip()
+
+
+def env_weather_key():
+    return (os.environ.get("WEATHER_API_KEY") or os.environ.get("WEATHERAPI_KEY") or "").strip()
+
+
+def env_gemini_model_name():
+    return (os.environ.get("GEMINI_MODEL") or "gemini-1.5-flash").strip()
+
+
 def get_gemini_model():
-    """Baris ini di-defer agar /weather & halaman utama tidak gagal saat cold start."""
+    """Sama konsepnya dengan genai.configure + GenerativeModel, tapi dijalankan saat pertama kali analisis (hemat cold start)."""
     global _gemini_model
     if _gemini_model is None:
-        key = os.environ.get("GEMINI_API_KEY")
+        key = env_gemini_key()
         if not key:
-            raise RuntimeError("GEMINI_API_KEY tidak di-set di environment.")
+            raise RuntimeError(
+                "API key Gemini tidak ada. Di Vercel: Settings → Environment Variables → "
+                "tambah GEMINI_API_KEY (atau GOOGLE_API_KEY), centang Production + Preview, lalu redeploy."
+            )
         genai.configure(api_key=key)
-        _gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+        _gemini_model = genai.GenerativeModel(env_gemini_model_name())
     return _gemini_model
 
 def get_weather_context(location):
     """Mengambil data cuaca real-time untuk memperkuat reasoning AI"""
+    if not env_weather_key():
+        return None
     base_url = "http://api.weatherapi.com/v1/current.json"
     params = {
-        "key": WEATHER_API_KEY,
+        "key": env_weather_key(),
         "q": location,
         "aqi": "no"
     }
@@ -52,13 +71,13 @@ def get_weather_context(location):
 
 def get_weather_forecast_bundle(location):
     """Cuaca saat ini + perkiraan besok untuk dasbor frontend."""
-    if not WEATHER_API_KEY:
+    if not env_weather_key():
         return None
     out = {"current": None, "forecast_tomorrow": None}
     try:
         cur = requests.get(
             "http://api.weatherapi.com/v1/current.json",
-            params={"key": WEATHER_API_KEY, "q": location, "aqi": "no"},
+            params={"key": env_weather_key(), "q": location, "aqi": "no"},
             timeout=10,
         )
         if cur.status_code == 200:
@@ -72,7 +91,7 @@ def get_weather_forecast_bundle(location):
             }
         fc = requests.get(
             "http://api.weatherapi.com/v1/forecast.json",
-            params={"key": WEATHER_API_KEY, "q": location, "days": 2, "aqi": "no", "alerts": "no"},
+            params={"key": env_weather_key(), "q": location, "days": 2, "aqi": "no", "alerts": "no"},
             timeout=10,
         )
         if fc.status_code == 200:
@@ -107,6 +126,16 @@ def get_weather_forecast_bundle(location):
 @app.route('/analyze', methods=['POST'])
 def analyze_onion():
     try:
+        if not env_gemini_key():
+            return (
+                jsonify(
+                    {
+                        "error": "GEMINI_API_KEY / GOOGLE_API_KEY belum di-set di server (Vercel → Environment Variables → Production + Preview → Redeploy)."
+                    }
+                ),
+                503,
+            )
+
         # 1. Ambil Input
         if 'image' not in request.files:
             return jsonify({"error": "Silakan unggah foto daun bawang"}), 400
@@ -240,7 +269,27 @@ def serve_js():
 
 @app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "AgriMind AI Backend is Running"}), 200
+    """Cek cepat: apakah env API terbaca di Vercel (nilai key tidak pernah dikirim)."""
+    gk = bool(env_gemini_key())
+    wk = bool(env_weather_key())
+    fe_ok = os.path.isdir(_FRONTEND_DIR) and os.path.isfile(
+        os.path.join(_FRONTEND_DIR, "index.html")
+    )
+    return (
+        jsonify(
+            {
+                "status": "ok",
+                "gemini_configured": gk,
+                "weather_configured": wk,
+                "frontend_static_ok": fe_ok,
+                "gemini_model": env_gemini_model_name() if gk else None,
+                "hint": None
+                if (gk and wk)
+                else "Set GEMINI_API_KEY (atau GOOGLE_API_KEY) dan WEATHER_API_KEY di Vercel, centang semua environment, redeploy.",
+            }
+        ),
+        200,
+    )
 
 if __name__ == '__main__':
     # Render membutuhkan port dari environment variable
