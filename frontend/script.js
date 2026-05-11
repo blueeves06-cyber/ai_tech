@@ -8,6 +8,32 @@ const API_ORIGIN = (() => {
 })();
 const API_URL = `${API_ORIGIN}/analyze`;
 const WEATHER_URL = `${API_ORIGIN}/weather`;
+const HEALTH_URL = `${API_ORIGIN}/health`;
+
+async function checkBackendEnv() {
+    try {
+        const res = await fetch(HEALTH_URL);
+        if (!res.ok) return;
+        const h = await res.json();
+        if (h.gemini_configured && h.weather_configured) return;
+        const title = document.getElementById('advisoryTitle');
+        const body = document.getElementById('advisoryBody');
+        if (!title || !body) return;
+        title.textContent = 'API key belum terbaca di server';
+        const lines = [];
+        if (!h.gemini_configured) {
+            lines.push('Gemini: set GEMINI_API_KEY atau GOOGLE_API_KEY di Vercel (Environment Variables).');
+        }
+        if (!h.weather_configured) {
+            lines.push('Cuaca: set WEATHER_API_KEY (WeatherAPI.com).');
+        }
+        lines.push('Centang Production dan Preview untuk tiap variabel, lalu Redeploy.');
+        body.textContent = lines.join(' ');
+        setAdvisoryCardStyle('rain');
+    } catch (e) {
+        console.warn('Health check:', e);
+    }
+}
 
 const HEALTH_HISTORY_KEY = 'agrimind_health_series';
 const MAX_HISTORY = 14;
@@ -304,7 +330,16 @@ async function fetchWeatherBundle() {
     const location = document.getElementById('locationInput')?.value?.trim() || 'Brebes, Indonesia';
     try {
         const res = await fetch(`${WEATHER_URL}?location=${encodeURIComponent(location)}`);
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) {
+            let msg = await res.text();
+            try {
+                const j = JSON.parse(msg);
+                if (j.error) msg = j.error;
+            } catch {
+                /* pakai teks mentah */
+            }
+            throw new Error(msg);
+        }
         lastWeatherBundle = await res.json();
         applyWeatherBundleToUI(lastWeatherBundle);
     } catch (e) {
@@ -688,7 +723,13 @@ async function uploadAndAnalyze() {
         });
 
         if (!response.ok) {
-            const errText = await response.text();
+            let errText = await response.text();
+            try {
+                const j = JSON.parse(errText);
+                if (j.error) errText = j.error;
+            } catch {
+                /* biarkan */
+            }
             throw new Error(errText || 'Network response was not ok');
         }
 
@@ -719,7 +760,8 @@ async function uploadAndAnalyze() {
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Gagal terhubung ke API analisis. Periksa jaringan atau server di: ' + API_URL);
+        const msg = error && error.message ? error.message : String(error);
+        alert('Analisis gagal.\n\n' + msg + '\n\nCek juga /health di tab baru: ' + HEALTH_URL);
         diagnosisLabel.innerText = 'Gagal memuat';
         diagnosisLabel.classList.add('text-red-600');
     } finally {
@@ -752,6 +794,7 @@ if (locInput) {
     locInput.addEventListener('change', scheduleWeatherRefresh);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    fetchWeatherBundle();
+document.addEventListener('DOMContentLoaded', async () => {
+    await fetchWeatherBundle();
+    await checkBackendEnv();
 });
