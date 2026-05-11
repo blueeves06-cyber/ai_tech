@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Panen | AgriMind AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-container">
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden transition-opacity opacity-0"></div>
+
+    <aside id="sidebar" class="sidebar fixed md:relative h-full transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40">
+        <div class="logo-section flex items-center justify-between mb-12">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[#C8E664] rounded-full flex items-center justify-center text-[#0B2E26] font-bold">V</div>
+                <span class="font-extrabold text-xl tracking-tight">Panen Pintar</span>
+            </div>
+            <button id="closeSidebarBtn" class="md:hidden text-white/70 hover:text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active" data-target="dasbor">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Dasbor
+            </a>
+            <a href="#" class="nav-item" data-target="analitik">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                Analitik
+            </a>
+            <a href="#" class="nav-item" data-target="panen">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Panen
+            </a>
+            <a href="#" class="nav-item" data-target="jadwal">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Jadwal
+            </a>
+        </nav>
+        <div class="mt-auto pt-10">
+            <button class="nav-item w-full opacity-60 hover:opacity-100 text-left flex items-center">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Keluar
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto w-full relative">
+        <header class="p-4 md:p-6 flex justify-between items-center bg-white/80 backdrop-blur-md shadow-sm z-20 sticky top-0 border-b border-slate-100">
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <button id="openSidebarBtn" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <div class="relative w-full max-w-md">
+                    <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="locationInput" value="Brebes, Jawa Tengah"
+                        class="w-full bg-slate-100 rounded-full pl-10 pr-6 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#C8E664] transition"
+                        placeholder="Cari lokasi...">
+                </div>
+            </div>
+            <div class="flex items-center gap-4 ml-4 shrink-0">
+                <div class="text-right hidden md:block">
+                    <p class="text-sm font-bold text-[#0B2E26]">Petani Sukses</p>
+                    <p class="text-xs text-gray-500">Kelompok Tani Makmur</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border-2 border-[#C8E664]">
+                    <img src="https://i.pravatar.cc/150?img=11" alt="User" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </header>
+
+        <div class="p-4 md:p-8">
+            <!-- SECTION: DASBOR -->
+            <section id="dasbor" class="page-section active">
+                <!-- Recent Alert -->
+                <div id="advisoryCard" class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-2xl mb-6 md:mb-8 flex items-start shadow-sm">
+                    <div id="advisoryIconWrap" class="text-amber-600 mr-3 mt-0.5 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 id="advisoryTitle" class="text-amber-900 font-bold text-sm md:text-base">Memuat data cuaca…</h4>
+                        <p id="advisoryBody" class="text-amber-800 text-xs md:text-sm mt-1">Menghubungkan ke API cuaca.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Cuaca & Risk Badge -->
+                    <div class="card relative overflow-hidden bg-white">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-[#C8E664] rounded-bl-full opacity-10"></div>
+                        <h3 class="card-title">Kondisi Cuaca Area</h3>
+                        <div class="flex justify-between items-end mt-4">
+                            <div>
+                                <p class="text-4xl md:text-5xl font-bold mt-2 text-[#0B2E26] tracking-tighter" id="tempDisplay">—<span class="text-2xl text-gray-400">C</span></p>
+                                <p id="weatherSubline" class="text-gray-500 text-xs md:text-sm mt-2 font-semibold flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                                    <span id="weatherSublineText">Memuat cuaca…</span>
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span id="riskBadge" class="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full text-xs font-bold inline-flex items-center shadow-sm whitespace-nowrap">
+                                    <span class="w-2 h-2 rounded-full bg-slate-400 mr-1.5"></span> <span id="riskBadgeText">Risiko: —</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Scan Widget -->
+                    <div class="card p-0 overflow-hidden relative border-2 border-dashed border-slate-300 group cursor-pointer bg-slate-50 min-h-[160px] md:min-h-[200px]" onclick="openCaptureModal()">
+                        <img id="previewImage" alt="Pratinjau foto daun"
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23f1f5f9' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='13'%3ETambah foto daun%3C/text%3E%3C/svg%3E"
+                            class="absolute inset-0 object-cover w-full h-full opacity-90 group-hover:scale-110 group-hover:opacity-100 transition duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0B2E26]/90 via-black/20 to-transparent flex flex-col justify-end p-5">
+                            <span class="text-white font-bold text-lg md:text-xl mb-1 flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                AI Scan Daun
+                            </span>
+                            <span class="text-[#C8E664] text-xs font-semibold uppercase tracking-wider">Klik untuk deteksi penyakit</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Health Diagnosis -->
+                    <div class="card">
+                        <h3 class="card-title">Skor Kesehatan Lahan</h3>
+                        <div class="flex items-center gap-4 md:gap-5 mt-4">
+                            <div class="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 drop-shadow-md">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                    <path class="text-slate-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path id="healthCircle" class="text-slate-200 transition-all duration-1000 ease-out" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span id="healthScoreCircle" class="text-xl md:text-2xl font-bold text-slate-400">--</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-base md:text-lg text-[#0B2E26] truncate" id="diagnosisLabel">Belum Ada Analisis</p>
+                                <div id="loading" class="hidden text-xs text-orange-500 animate-pulse mt-1 font-bold">Menggunakan AI...</div>
+                                <ul id="actionPlan" class="mt-2 text-xs space-y-1 text-slate-600 list-disc pl-4 font-medium">
+                                    <li>Upload foto untuk hasil.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-center">
+                    <button id="analyzeBtn" class="w-full md:w-2/3 lg:w-1/2 btn-analyze flex justify-center items-center gap-3 text-base md:text-lg shadow-xl shadow-[#C8E664]/20">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Analisis Foto Sekarang
+                    </button>
+                </div>
+            </section>
+
+            <!-- SECTION: ANALITIK -->
+            <section id="analitik" class="page-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                    <!-- Historical Health -->
+                    <div class="card shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="card-title !mb-0">Tren Kesehatan (30 Hari)</h3>
+                            <span id="trendBadge" class="bg-slate-50 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">Tren dari analisis</span>
+                        </div>
+                        <div class="relative h-48 md:h-64 w-full">
+                            <canvas id="historicalChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Production Comparison -->
+                    <div class="card shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="card-title !mb-0">Perbandingan Tonase</h3>
+                            <select class="bg-slate-50 border border-slate-200 text-xs px-2 py-1 rounded-lg outline-none font-bold text-slate-600">
+                                <option>Musim Ini vs Lalu</option>
+                            </select>
+                        </div>
+                        <div class="relative h-48 md:h-64 w-full">
+                            <canvas id="productionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environmental Inference -->
+                <div class="card bg-[#0B2E26] text-white overflow-hidden relative">
+                    <!-- Decorative background -->
+                    <div class="absolute right-0 top-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+                    
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-[#C8E664] mb-6 relative z-10 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Estimasi Kondisi Lingkungan AI
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                        <div class="bg-white/10 p-5 md:p-6 rounded-2xl border border-white/10 hover:bg-white/20 transition">
+                            <p class="text-sm text-slate-300 font-semibold mb-2">Estimasi pH Tanah</p>
+                            <div class="flex items-end gap-3">
+                                <p id="envPh" class="text-3xl md:text-4xl font-bold text-white">—</p>
+                                <span id="envPhBadge" class="bg-white/20 text-white px-2 py-1 rounded text-xs font-bold mb-1">—</span>
+                            </div>
+                        </div>
+                        <div class="bg-white/10 p-5 md:p-6 rounded-2xl border border-white/10 hover:bg-white/20 transition">
+                            <p class="text-sm text-slate-300 font-semibold mb-2">Kelembapan Tanah</p>
+                            <div class="flex items-end gap-3">
+                                <p id="envMoisture" class="text-3xl md:text-4xl font-bold text-white">—</p>
+                                <span id="envMoistureBadge" class="bg-white/20 text-white px-2 py-1 rounded text-xs font-bold mb-1">—</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex flex-col justify-center">
+                            <p id="envNote" class="text-xs md:text-sm text-slate-300 italic border-l-4 border-[#C8E664] pl-4 leading-relaxed">
+                                Inferensi lingkungan muncul setelah analisis foto (API AgriMind).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: PANEN -->
+            <section id="panen" class="page-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
+                    <!-- Yield Estimation -->
+                    <div class="card lg:col-span-2 bg-gradient-to-r from-[#C8E664] to-[#e4ff8c] border-none shadow-lg relative overflow-hidden flex flex-col justify-center min-h-[200px]">
+                        <div class="absolute right-0 bottom-0 text-slate-800 opacity-10 transform translate-y-8 translate-x-4">
+                            <svg class="w-48 h-48" fill="currentColor" viewBox="0 0 24 24"><path d="M19,8H17V6H13V8H11V6H7V8H5A2,2 0 0,0 3,10V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V10A2,2 0 0,0 19,8M19,20H5V10H19V20M17,12H15V14H17V12M13,12H11V14H13V12M9,12H7V14H9V12M17,16H15V18H17V16M13,16H11V18H13V16M9,16H7V18H9V16Z" /></svg>
+                        </div>
+                        <h3 class="text-[#0B2E26] font-bold uppercase tracking-widest text-xs opacity-70 mb-2 relative z-10">Proyeksi Total Panen</h3>
+                        <div class="flex items-baseline gap-2 relative z-10">
+                            <p id="yieldTotal" class="text-6xl md:text-7xl font-bold text-[#0B2E26] tracking-tighter">—</p>
+                            <p class="text-xl md:text-2xl font-bold text-[#0B2E26]">Ton</p>
+                        </div>
+                        <p class="text-[#0B2E26] text-xs md:text-sm mt-3 font-semibold relative z-10 flex items-center gap-2">
+                            <span id="yieldAreaBadge" class="bg-[#0B2E26] text-[#C8E664] px-2 py-0.5 rounded text-xs">Luas: —</span>
+                            <span id="yieldAccuracy">Estimasi dari analisis AI</span>
+                        </p>
+                    </div>
+
+                    <!-- Market Price -->
+                    <div class="card flex flex-col justify-center text-center relative shadow-sm border-2 border-green-50">
+                        <h3 class="card-title">Harga Bawang Merah</h3>
+                        <p id="marketLocation" class="text-sm text-slate-500 font-semibold mb-1">—</p>
+                        <p id="marketPrice" class="text-3xl md:text-4xl font-bold text-[#0B2E26] mt-2 tracking-tight">—</p>
+                        <p class="text-xs text-slate-400 font-bold mt-1">/ Kg</p>
+                        <div class="mt-4">
+                            <span id="marketChange" class="inline-block bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full text-xs font-bold">
+                                Data dari analisis terakhir
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch Tracking -->
+                <div class="card shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                        <h3 class="card-title !mb-0 text-base">Manajemen Blok Lahan</h3>
+                        <button class="text-[#0B2E26] text-xs font-bold bg-[#C8E664]/20 px-4 py-2 rounded-lg hover:bg-[#C8E664] transition flex items-center gap-2 self-start sm:self-auto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Tambah Lahan
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="text-slate-400 text-xs uppercase tracking-wider border-b-2 border-slate-100">
+                                    <th class="pb-4 px-2 md:px-4 font-bold">Nama Blok</th>
+                                    <th class="pb-4 px-2 md:px-4 font-bold">Varietas</th>
+                                    <th class="pb-4 px-2 md:px-4 font-bold">Luas Area</th>
+                                    <th class="pb-4 px-2 md:px-4 font-bold">Est. Hasil</th>
+                                    <th class="pb-4 px-2 md:px-4 font-bold">Status Pertumbuhan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blocksTableBody" class="text-sm font-semibold">
+                                <tr>
+                                    <td colspan="5" class="py-8 px-4 text-center text-slate-500 font-medium">Belum ada data blok. Jalankan analisis foto untuk mengisi dari API.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: JADWAL -->
+            <section id="jadwal" class="page-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                    <!-- Planting Timeline & Countdown -->
+                    <div class="card relative overflow-hidden bg-gradient-to-br from-[#0B2E26] to-[#124237] text-white p-6 md:p-8">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-[#C8E664] rounded-full blur-3xl opacity-20 -mr-10 -mt-10"></div>
+                        <h3 id="jadwalBlockTitle" class="text-[#C8E664] font-bold uppercase tracking-widest text-xs mb-6">Jadwal &amp; siklus</h3>
+                        
+                        <div class="flex flex-col gap-6">
+                            <div>
+                                <p class="text-sm text-slate-300 font-semibold mb-1">Usia Tanaman</p>
+                                <div class="flex items-baseline gap-2">
+                                    <p id="plantAge" class="text-4xl md:text-5xl font-bold text-white tracking-tighter">—</p>
+                                    <p class="text-base md:text-lg font-semibold text-slate-400">HST</p>
+                                </div>
+                            </div>
+
+                            <div class="w-full bg-white/10 rounded-full h-3 backdrop-blur-sm relative">
+                                <div id="cycleProgressBar" class="bg-gradient-to-r from-[#C8E664] to-green-400 h-3 rounded-full shadow-[0_0_10px_rgba(200,230,100,0.5)] transition-all duration-500" style="width: 0%"></div>
+                                <div class="absolute top-4 left-0 text-[10px] text-slate-400 font-bold">Tanam</div>
+                                <div id="cycleEndLabel" class="absolute top-4 right-0 text-[10px] text-slate-400 font-bold">Panen</div>
+                            </div>
+
+                            <div class="mt-2 bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-center">
+                                <div>
+                                    <p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Target Panen</p>
+                                    <p id="harvestTarget" class="text-base md:text-lg font-bold">—</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-2xl md:text-3xl font-bold text-[#C8E664]"><span id="daysToHarvest">—</span><span class="text-xs md:text-sm ml-1 text-slate-300">Hari</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-6">
+                        <!-- Irrigation Timer -->
+                        <div class="card flex items-center gap-4 md:gap-6 p-5 md:p-6 border-l-4 border-blue-400 shadow-sm">
+                            <div class="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center shadow-inner shrink-0">
+                                <svg class="w-6 h-6 md:w-8 md:h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Saran irigasi / siram</h3>
+                                <p id="irrigationTime" class="text-lg md:text-xl font-bold text-[#0B2E26] tracking-tighter mb-1 leading-snug">—</p>
+                                <p id="irrigationHint" class="text-[10px] md:text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">Dari analisis AI</p>
+                            </div>
+                        </div>
+
+                        <!-- Weather Mini Card -->
+                        <div class="card p-5 md:p-6 shadow-sm flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3 md:gap-4">
+                                <div class="text-slate-600">
+                                    <svg class="w-8 h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm md:text-base text-[#0B2E26]">Prediksi Besok</h3>
+                                    <p id="tomorrowForecast" class="text-xs md:text-sm font-semibold text-slate-500">Memuat…</p>
+                                </div>
+                            </div>
+                            <span id="tomorrowBadge" class="text-[10px] md:text-xs font-bold text-[#0B2E26] bg-[#C8E664] px-2 md:px-3 py-1.5 rounded-lg text-center leading-tight max-w-[120px]">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI-Generated Tasks -->
+                <div class="card shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="card-title !mb-0 text-base">Tugas Harian dari AI</h3>
+                        <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold">Hari ini</span>
+                    </div>
+                    
+                    <div id="dailyTasksList" class="space-y-3">
+                        <p class="text-sm text-slate-500 py-4 text-center">Tugas harian akan diisi dari respons API setelah analisis foto.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal Kamera -->
+    <div id="captureModal" class="fixed inset-0 bg-[#0B2E26]/80 hidden z-50 flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+        <div class="bg-white rounded-[2rem] p-6 md:p-8 max-w-md w-full shadow-2xl transform transition-all scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="modalContent" style="transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <h3 class="text-xl md:text-2xl font-bold mb-6 text-center text-[#0B2E26]">Ambil Foto Daun</h3>
+            <div class="grid grid-cols-2 gap-4 md:gap-5">
+                <button id="galleryBtn"
+                    class="flex flex-col items-center justify-center p-6 md:p-8 border-2 border-slate-100 rounded-3xl bg-slate-50 hover:bg-[#C8E664]/10 hover:border-[#C8E664] transition-all group shadow-sm">
+                    <svg class="w-10 h-10 md:w-12 md:h-12 text-slate-600 group-hover:-translate-y-2 group-hover:text-[#0B2E26] transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span class="text-xs md:text-sm font-bold mt-4 text-[#0B2E26]">Dari Galeri</span>
+                </button>
+                <button id="cameraBtn"
+                    class="flex flex-col items-center justify-center p-6 md:p-8 border-2 border-slate-100 rounded-3xl bg-slate-50 hover:bg-[#C8E664]/10 hover:border-[#C8E664] transition-all group shadow-sm">
+                    <svg class="w-10 h-10 md:w-12 md:h-12 text-slate-600 group-hover:-translate-y-2 group-hover:text-[#0B2E26] transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="text-xs md:text-sm font-bold mt-4 text-[#0B2E26]">Buka Kamera</span>
+                </button>
+            </div>
+            <div id="cameraContainer" class="hidden mt-6 overflow-hidden rounded-2xl border-4 border-slate-100 relative shadow-inner">
+                <video id="video" class="w-full bg-black aspect-[3/4] object-cover" autoplay playsinline></video>
+                <div class="absolute bottom-6 left-0 right-0 flex justify-center">
+                    <button id="snapBtn" class="w-14 h-14 md:w-16 md:h-16 bg-white rounded-full border-4 border-[#C8E664] hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(200,230,100,0.5)] flex items-center justify-center">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-100 rounded-full border border-slate-200"></div>
+                    </button>
+                </div>
+            </div>
+            <button id="closeModalBtn" class="w-full mt-6 py-3 rounded-xl text-slate-500 font-bold hover:bg-slate-100 hover:text-slate-800 transition-colors">Batal</button>
+        </div>
+    </div>
+
+    <input type="file" id="imageInput" class="hidden" accept="image/*">
+    <canvas id="canvas" class="hidden"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
