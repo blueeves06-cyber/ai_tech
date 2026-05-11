@@ -1,6 +1,12 @@
-// Konfigurasi API (satu origin untuk /analyze dan /weather)
-const API_URL = 'https://project-make-ai-agent.onrender.com/analyze';
-const API_ORIGIN = API_URL.replace(/\/analyze\/?$/i, '');
+// API: default = origin yang sama (Vercel satu proyek: Flask layani UI + /analyze + /weather).
+// Jika frontend terpisah dari backend, set sebelum script ini: window.__API_ORIGIN__ = 'https://api-anda.com';
+const API_ORIGIN = (() => {
+    if (typeof window === 'undefined') return '';
+    const custom = window.__API_ORIGIN__;
+    if (custom) return String(custom).replace(/\/$/, '');
+    return window.location.origin;
+})();
+const API_URL = `${API_ORIGIN}/analyze`;
 const WEATHER_URL = `${API_ORIGIN}/weather`;
 
 const HEALTH_HISTORY_KEY = 'agrimind_health_series';
